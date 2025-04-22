@@ -10,6 +10,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.4
 	github.com/gin-gonic/gin v1.10.0
+	github.com/stretchr/testify v1.10.0
+)
+
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 )
 
 require (
