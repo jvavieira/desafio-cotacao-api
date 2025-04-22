@@ -1,0 +1,32 @@
+# Binários compilados
+bootstrap
+main
+*.exe
+*.zip
+
+# Diretórios Go
+vendor/
+bin/
+pkg/
+
+# Cache do Docker
+*.tar
+.dockerignore
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+*.tfplan
+
+# Secrets locais
+.env
+*.secret
+*.key
+
+# Editor e sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
