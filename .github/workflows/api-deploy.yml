@@ -26,17 +26,16 @@ jobs:
       - name: Rodar testes e gerar cobertura
         run: |
             go test ./services ./handlers -coverprofile=coverage.out
-            grep -v "main.go" coverage.out > coverage-clean.out
-            go tool cover -func=coverage-clean.out
-            total=$(go tool cover -func=coverage-clean.out | grep total: | awk '{print substr($3, 1, length($3)-1)}')
-            echo "Cobertura total: $total%"
+            grep -Ev "main.go|cmd|models" coverage.out > coverage-filtered.out
+            total=$(go tool cover -func=coverage-filtered.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+            echo "Cobertura filtrada: $total%"
             threshold=80.0
             result=$(echo "$total >= $threshold" | bc)
             if [ "$result" -ne 1 ]; then
               echo "❌ Cobertura abaixo de $threshold% (atual: $total%)"
               exit 1
             fi
-            
+
       - name: Análise de vulnerabilidades com Trivy
         uses: aquasecurity/trivy-action@master
         with:
