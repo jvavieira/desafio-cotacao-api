@@ -23,18 +23,32 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Rodar testes e gerar cobertura
+      - name: Rodar testes e validar cobertura mínima
         run: |
-            go test ./services ./handlers -coverprofile=coverage.out
-            grep -Ev "cmd/|main.go|models" coverage.out > coverage-filtered.out
-            total=$(go tool cover -func=coverage-filtered.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
-            echo "Cobertura filtrada: $total%"
-            threshold=80.0
-            result=$(echo "$total >= $threshold" | bc)
-            if [ "$result" -ne 1 ]; then
-              echo "❌ Cobertura abaixo de $threshold% (atual: $total%)"
-              exit 1
-            fi
+          echo "🏁 Iniciando testes com cobertura..."
+          go test ./... -coverprofile=coverage.out
+
+          echo "🔎 Arquivos incluídos na cobertura:"
+          cat coverage.out
+
+          echo "🧹 Filtrando arquivos indesejados..."
+          grep -Ev "cmd/|main.go|models" coverage.out > coverage-filtered.out
+
+          echo "🔍 Arquivos após filtro:"
+          cat coverage-filtered.out
+
+          echo "📊 Calculando total de cobertura..."
+          total=$(go tool cover -func=coverage-filtered.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+          echo "Cobertura filtrada: $total%"
+
+          threshold=80.0
+          result=$(echo "$total >= $threshold" | bc)
+          if [ "$result" -ne 1 ]; then
+            echo "❌ Cobertura abaixo de $threshold% (atual: $total%)"
+            exit 1
+          else
+            echo "✅ Cobertura mínima atingida!"
+          fi
 
       - name: Análise de vulnerabilidades com Trivy
         uses: aquasecurity/trivy-action@master

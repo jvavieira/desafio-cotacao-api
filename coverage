@@ -1,4 +1,13 @@
 mode: set
+cambio-brl-usd/cmd/lambda/main.go:10.35,12.2 1 0
+cambio-brl-usd/cmd/lambda/main.go:14.13,16.2 1 0
+cambio-brl-usd/cmd/api/main.go:9.13,14.2 4 0
+cambio-brl-usd/handlers/cotacao_handler.go:10.36,13.2 2 1
+cambio-brl-usd/handlers/cotacao_handler.go:15.39,22.19 5 1
+cambio-brl-usd/handlers/cotacao_handler.go:22.19,25.6 2 1
+cambio-brl-usd/handlers/cotacao_handler.go:27.5,28.19 2 1
+cambio-brl-usd/handlers/cotacao_handler.go:28.19,31.6 2 0
+cambio-brl-usd/handlers/cotacao_handler.go:33.5,34.37 2 1
 cambio-brl-usd/services/cotacao_service.go:29.101,31.3 1 1
 cambio-brl-usd/services/cotacao_service.go:37.43,40.17 2 1
 cambio-brl-usd/services/cotacao_service.go:40.17,42.3 1 1
