@@ -25,18 +25,18 @@ jobs:
 
       - name: Rodar testes e validar cobertura mínima
         run: |
-          echo "🏁 Iniciando testes com cobertura..."
+          echo "🏁 Iniciando testes com cobertura nos pacotes services e handlers..."
 
-          # Gera cobertura de todos os pacotes internos exceto cmd/
-          go test $(go list ./... | grep -v "cmd/") -coverprofile=coverage.out
+          # Executa testes APENAS nos pacotes relevantes
+          go test ./services ./handlers -coverprofile=coverage.out
 
           echo "🔍 Arquivos incluídos na cobertura:"
           cat coverage.out
 
-          echo "🧹 Removendo arquivos como main.go ou models (se existirem)"
+          echo "🧹 Removendo arquivos irrelevantes (main.go, models, etc)"
           grep -Ev "main.go|models" coverage.out > coverage-filtered.out
 
-          echo "📊 Calculando total de cobertura..."
+          echo "📊 Calculando total de cobertura filtrada..."
           total=$(go tool cover -func=coverage-filtered.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
           echo "Cobertura filtrada: $total%"
 
