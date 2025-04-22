@@ -1,21 +1,9 @@
-# Etapa de build com Go
 FROM golang:1.22 AS builder
 WORKDIR /app
-
-# Copia os arquivos necessários
 COPY go.mod go.sum ./
 RUN go mod download
-
 COPY . .
-
-# Compila o executável chamado bootstrap
 RUN CGO_ENABLED=0 GOOS=linux go build -o bootstrap ./cmd/lambda/main.go
 
-# Etapa final: imagem compatível com Lambda
-FROM public.ecr.aws/lambda/provided:al2
-
-# Copia o binário para o local correto
-COPY --from=builder /app/bootstrap /var/task/bootstrap
-
-# Garante que seja executável
-RUN chmod +x /var/task/bootstrap
+FROM public.ecr.aws/lambda/go:1
+COPY --from=builder /app/bootstrap ${LAMBDA_TASK_ROOT}
