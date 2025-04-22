@@ -23,40 +23,50 @@ type apiResponse struct {
 	Rates   map[string]float64 `json:"rates"`
 }
 
+var (
+	NewHTTPRequest = http.NewRequest
+	HTTPClientDo   = (&http.Client{}).Do
+	DynamoScan     = func(c *dynamodb.Client, input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
+		return c.Scan(context.TODO(), input)
+	}
+	UnmarshalList = attributevalue.UnmarshalListOfMaps
+)
+
+var SecretsFetcher = BuscarAPIKeyDoFixer
+
 func BuscarUltimaCotacao() models.Cotacao {
-	token := buscarAPIKeyDoFixer()
+	token := SecretsFetcher()
+
 	if token == "" {
-		return buscarUltimaCotacaoMock()
+		return BuscarUltimaCotacaoMock()
 	}
 
 	url := "https://api.apilayer.com/fixer/latest?base=BRL&symbols=USD"
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := NewHTTPRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println("Erro ao criar requisição:", err)
-		return buscarUltimaCotacaoMock()
+		return BuscarUltimaCotacaoMock()
 	}
 
 	req.Header.Add("apikey", token)
 
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
+	resp, err := HTTPClientDo(req)
 	if err != nil {
 		fmt.Println("Erro ao buscar cotação:", err)
-		return buscarUltimaCotacaoMock()
+		return BuscarUltimaCotacaoMock()
 	}
 	defer resp.Body.Close()
 
 	var apiResp apiResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
 		fmt.Println("Erro ao decodificar JSON:", err)
-		return buscarUltimaCotacaoMock()
+		return BuscarUltimaCotacaoMock()
 	}
 
 	if !apiResp.Success {
 		fmt.Println("API retornou sucesso=false")
-		return buscarUltimaCotacaoMock()
+		return BuscarUltimaCotacaoMock()
 	}
 
 	usdRate := apiResp.Rates["USD"]
@@ -69,7 +79,7 @@ func BuscarUltimaCotacao() models.Cotacao {
 		DataHora:     time.Now(),
 	}
 
-	salvarCotacaoNoDynamo(cotacao)
+	SalvarCotacaoNoDynamo(cotacao)
 
 	return cotacao
 
@@ -102,14 +112,14 @@ func BuscarHistorico(inicio, fim time.Time) []models.Cotacao {
 		FilterExpression:          expr.Filter(),
 	}
 
-	result, err := client.Scan(context.TODO(), input)
+	result, err := DynamoScan(client, input)
 	if err != nil {
 		fmt.Println("Erro ao fazer scan no DynamoDB:", err)
 		return nil
 	}
 
 	var cotacoes []models.Cotacao
-	if err := attributevalue.UnmarshalListOfMaps(result.Items, &cotacoes); err != nil {
+	if err := UnmarshalList(result.Items, &cotacoes); err != nil {
 		fmt.Println("Erro ao converter resultados:", err)
 		return nil
 	}
@@ -117,17 +127,7 @@ func BuscarHistorico(inicio, fim time.Time) []models.Cotacao {
 	return cotacoes
 }
 
-func buscarUltimaCotacaoMock() models.Cotacao {
-	return models.Cotacao{
-		MoedaOrigem:  "BRL",
-		MoedaDestino: "USD",
-		Valor:        5.00,
-		DataHora:     time.Now(),
-	}
-
-}
-
-func salvarCotacaoNoDynamo(cotacao models.Cotacao) {
+func SalvarCotacaoNoDynamo(cotacao models.Cotacao) {
 
 	cfg := carregarConfigAWS()
 
@@ -151,7 +151,7 @@ func salvarCotacaoNoDynamo(cotacao models.Cotacao) {
 	}
 }
 
-func buscarAPIKeyDoFixer() string {
+func BuscarAPIKeyDoFixer() string {
 	secretName := "fixer-api-key-dev"
 
 	cfg := carregarConfigAWS()
@@ -184,4 +184,14 @@ func carregarConfigAWS() aws.Config {
 		os.Exit(1) // encerra a aplicação
 	}
 	return cfg
+}
+
+func BuscarUltimaCotacaoMock() models.Cotacao {
+	return models.Cotacao{
+		MoedaOrigem:  "BRL",
+		MoedaDestino: "USD",
+		Valor:        5.00,
+		DataHora:     time.Now(),
+	}
+
 }

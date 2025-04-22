@@ -40,10 +40,10 @@ Para aplicar a infraestrutura, siga os seguintes passos:
 ```bash
 cd terraform
 terraform init
-terraform apply
+terraform apply -var="fixer_api_key_value=SUA_CHAVE_DO_FIXER"
 ```
-
-> ⚠️ Certifique-se de que as credenciais da AWS estejam configuradas corretamente.
+⚠️ A chave da API do Fixer.io é passada via variável no momento do apply, e não está escrita em nenhum código-fonte, mantendo a segurança das credenciais.
+⚠️ Certifique-se de que as credenciais da AWS estejam configuradas corretamente.
 
 ## API de Cotações
 
@@ -91,9 +91,31 @@ Consulta o histórico de cotações dentro de um intervalo de datas.
 
 A aplicação é empacotada em uma imagem Docker e enviada ao Amazon Elastic Container Registry (ECR). O serviço App Runner é responsável por executar a imagem e disponibilizar os endpoints públicos.
 
+## Etapas:
+
+1. O Dockerfile na raiz do projeto define a build da aplicação Go.
+
+2. Um workflow no GitHub Actions (lambda-deploy.yml) realiza:
+
+  - Checkout do código
+  - Testes unitários
+  - Análise de vulnerabilidades com Trivy
+  - Build da imagem
+  - Push da imagem para o ECR
+
+3. O Terraform provisiona o serviço App Runner apontando para a imagem mais recente do repositório.
+
+## Exemplo de execução do workflow:
+
+ - Vá até a aba Actions no GitHub
+ - Escolha o workflow Deploy Lambda Container (nome pode variar)
+ - Clique em Run workflow
+
+O serviço App Runner será automaticamente atualizado com a nova imagem da aplicação.
+
 ## EventBridge + Lambda *(melhoria não concluída)*
 
-O projeto previa a inclusão de uma função Lambda acoplada ao Amazon EventBridge, com objetivo de automatizar a coleta de cotações em horários agendados. Apesar da estrutura ter sido parcialmente implementada via Terraform, a integração final não foi concluída devido à limitação de tempo.
+O projeto previa a inclusão de uma função Lambda acoplada ao Amazon EventBridge, com objetivo de automatizar a coleta de cotações em horários agendados. Apesar da estrutura ter sido parcialmente implementada via Terraform, a integração final não foi concluída devido à limitação de tempo, onde o teste realizado manualmente no Console, não retornou o resultado esperado.
 
 ## CI/CD da API principal
 
@@ -112,6 +134,14 @@ A execução pode ser feita manualmente na aba **Actions** do GitHub ou ser conf
 ## Instruções de Teste e Submissão
 
 ### Testar a API
+
+1. Acesse o endpoint público fornecido pelo App Runner:
+
+Ex: https://<endpoint>.awsapprunner.com/cotacao/ultima
+
+Ex: https://<endpoint>.awsapprunner.com/cotacao/historico?inicio=2025-04-20T00:00&fim=2025-04-22T23:59
+
+2. Utilize ferramentas como Postman, Insomnia ou curl:
 ```bash
 curl https://<seu-endpoint>/cotacao/ultima
 ```
