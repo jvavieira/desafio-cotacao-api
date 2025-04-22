@@ -7,10 +7,10 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func handler(ctx context.Context) {
+func Handler(ctx context.Context) {
 	services.BuscarUltimaCotacao()
 }
 
 func main() {
-	lambda.Start(handler)
+	lambda.Start(Handler)
 }
