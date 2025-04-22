@@ -26,7 +26,7 @@ jobs:
       - name: Rodar testes e gerar cobertura
         run: |
             go test ./services ./handlers -coverprofile=coverage.out
-            grep -Ev "main.go|cmd|models" coverage.out > coverage-filtered.out
+            grep -Ev "cmd/|main.go|models" coverage.out > coverage-filtered.out
             total=$(go tool cover -func=coverage-filtered.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
             echo "Cobertura filtrada: $total%"
             threshold=80.0
