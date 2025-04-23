@@ -36,6 +36,12 @@ var PutItemFn = func(client *dynamodb.Client, input *dynamodb.PutItemInput) (*dy
 	return client.PutItem(context.TODO(), input)
 }
 
+var GetSecretValueFn = func(svc *secretsmanager.Client, input *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
+	return svc.GetSecretValue(context.TODO(), input)
+}
+
+var JSONUnmarshalFn = json.Unmarshal
+
 var SecretsFetcher = BuscarAPIKeyDoFixer
 var SaveCotacao = SalvarCotacaoNoDynamo
 
@@ -163,7 +169,7 @@ func BuscarAPIKeyDoFixer() string {
 
 	svc := secretsmanager.NewFromConfig(cfg)
 
-	result, err := svc.GetSecretValue(context.TODO(), &secretsmanager.GetSecretValueInput{
+	result, err := GetSecretValueFn(svc, &secretsmanager.GetSecretValueInput{
 		SecretId: &secretName,
 	})
 
@@ -173,7 +179,7 @@ func BuscarAPIKeyDoFixer() string {
 	}
 
 	var parsed map[string]string
-	if err := json.Unmarshal([]byte(*result.SecretString), &parsed); err != nil {
+	if err := JSONUnmarshalFn([]byte(*result.SecretString), &parsed); err != nil {
 		fmt.Println("Erro ao interpretar JSON do segredo:", err)
 		return ""
 	}

@@ -15,6 +15,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,7 +51,7 @@ func TestBuscarUltimaCotacao_ErroAoCriarRequisicao(t *testing.T) {
 
 func TestBuscarHistorico_ErroNaExpressao(t *testing.T) {
 	inicio := time.Now().Add(-48 * time.Hour)
-	fim := time.Now().Add(-48 * time.Hour) // mesma data para forçar filtro vazio
+	fim := time.Now().Add(-48 * time.Hour)
 	_ = services.BuscarHistorico(inicio, fim)
 }
 
@@ -201,7 +202,7 @@ func TestBuscarUltimaCotacao_ErroClientDo(t *testing.T) {
 	defer func() { services.HTTPClientDo = original }()
 
 	services.SecretsFetcher = func() string { return "token" }
-	services.NewHTTPRequest = http.NewRequest // garantir compatibilidade
+	services.NewHTTPRequest = http.NewRequest
 
 	cotacao := services.BuscarUltimaCotacao()
 	if cotacao.Valor != 5.00 {
@@ -282,7 +283,6 @@ func TestBuscarUltimaCotacao_ComSucesso(t *testing.T) {
 }
 
 func TestBuscarHistorico_ErroNaExpressaoOther(t *testing.T) {
-	// expression.Name("") é inválido e causará erro no Build()
 	defer func() {
 		if r := recover(); r != nil {
 			t.Errorf("Função não deve causar panic mesmo com erro na expressão")
@@ -365,5 +365,65 @@ func TestSalvarCotacaoNoDynamo_ErroPutItem(t *testing.T) {
 	}
 
 	services.SaveCotacao(cotacao)
-	// Nenhuma validação explícita: só estamos garantindo que não panica
+}
+
+func TestBuscarAPIKeyDoFixer_ErroSecretsManager(t *testing.T) {
+	original := services.SecretsFetcher
+	services.SecretsFetcher = func() string {
+		t.Log("Simulando erro ao obter segredo")
+		return ""
+	}
+	defer func() { services.SecretsFetcher = original }()
+
+	token := services.SecretsFetcher()
+	if token != "" {
+		t.Errorf("Esperava retorno vazio, obteve: %s", token)
+	}
+}
+
+func TestBuscarAPIKeyDoFixer_JSONInvalidoOthers(t *testing.T) {
+	original := services.SecretsFetcher
+	services.SecretsFetcher = func() string {
+		raw := `{"fixer_api_key":123}` // valor numérico, quebra o json.Unmarshal
+		var parsed map[string]string
+		err := json.Unmarshal([]byte(raw), &parsed)
+		if err != nil {
+			t.Log("Erro ao interpretar JSON simulado")
+			return ""
+		}
+		return parsed["fixer_api_key"]
+	}
+	defer func() { services.SecretsFetcher = original }()
+
+	token := services.SecretsFetcher()
+	if token != "" {
+		t.Errorf("Esperava falha no unmarshal, obteve: %s", token)
+	}
+}
+
+func TestBuscarAPIKeyDoFixer_ErroAoObterSegredo(t *testing.T) {
+	original := services.GetSecretValueFn
+	services.GetSecretValueFn = func(_ *secretsmanager.Client, _ *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
+		return nil, errors.New("erro simulado")
+	}
+	defer func() { services.GetSecretValueFn = original }()
+
+	key := services.BuscarAPIKeyDoFixer()
+	if key != "" {
+		t.Errorf("Esperava string vazia, obteve: %s", key)
+	}
+}
+
+func TestBuscarAPIKeyDoFixer_ErroJSONUnmarshal(t *testing.T) {
+	original := services.GetSecretValueFn
+	services.GetSecretValueFn = func(_ *secretsmanager.Client, _ *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
+		str := "isso-não-é-json"
+		return &secretsmanager.GetSecretValueOutput{SecretString: &str}, nil
+	}
+	defer func() { services.GetSecretValueFn = original }()
+
+	key := services.BuscarAPIKeyDoFixer()
+	if key != "" {
+		t.Errorf("Esperava string vazia por erro no unmarshal, obteve: %s", key)
+	}
 }
