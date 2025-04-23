@@ -16,7 +16,7 @@ cambio-brl-usd/services/cotacao_service.go:103.16,106.3 2 0
 cambio-brl-usd/services/cotacao_service.go:109.2,117.16 3 1
 cambio-brl-usd/services/cotacao_service.go:117.16,120.3 2 1
 cambio-brl-usd/services/cotacao_service.go:122.2,123.63 2 1
-cambio-brl-usd/services/cotacao_service.go:123.63,126.3 2 0
+cambio-brl-usd/services/cotacao_service.go:123.63,126.3 2 1
 cambio-brl-usd/services/cotacao_service.go:128.2,128.17 1 1
 cambio-brl-usd/services/cotacao_service.go:131.52,138.16 4 1
 cambio-brl-usd/services/cotacao_service.go:138.16,141.3 2 0

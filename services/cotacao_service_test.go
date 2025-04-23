@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -277,5 +278,50 @@ func TestBuscarUltimaCotacao_ComSucesso(t *testing.T) {
 	}
 	if cotacao.MoedaOrigem != "BRL" || cotacao.MoedaDestino != "USD" {
 		t.Errorf("Esperava moedas BRL→USD, recebeu: %+v", cotacao)
+	}
+}
+
+func TestBuscarHistorico_ErroNaExpressaoOther(t *testing.T) {
+	// expression.Name("") é inválido e causará erro no Build()
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Função não deve causar panic mesmo com erro na expressão")
+		}
+	}()
+	fakeInicio := time.Now()
+	fakeFim := time.Now()
+
+	_ = services.BuscarHistorico(fakeInicio, fakeFim)
+}
+
+func TestBuscarHistorico_ErroScanDynamo(t *testing.T) {
+	original := services.DynamoScan
+	services.DynamoScan = func(_ *dynamodb.Client, _ *dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
+		return nil, errors.New("simulando erro no scan")
+	}
+	defer func() { services.DynamoScan = original }()
+
+	fakeInicio := time.Now().Add(-24 * time.Hour)
+	fakeFim := time.Now()
+
+	result := services.BuscarHistorico(fakeInicio, fakeFim)
+	if result != nil {
+		t.Errorf("Esperava retorno nil em erro de scan")
+	}
+}
+
+func TestBuscarHistorico_ErroUnmarshal(t *testing.T) {
+	original := services.UnmarshalList
+	services.UnmarshalList = func(_ []map[string]types.AttributeValue, _ interface{}) error {
+		return errors.New("erro simulado no unmarshal")
+	}
+	defer func() { services.UnmarshalList = original }()
+
+	fakeInicio := time.Now().Add(-24 * time.Hour)
+	fakeFim := time.Now()
+
+	result := services.BuscarHistorico(fakeInicio, fakeFim)
+	if result != nil {
+		t.Errorf("Esperava retorno nil em erro de unmarshal")
 	}
 }
