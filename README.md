@@ -42,7 +42,8 @@ cd terraform
 terraform init
 terraform apply -var="fixer_api_key_value=SUA_CHAVE_DO_FIXER"
 ```
-⚠️ A chave da API do Fixer.io é passada via variável no momento do apply, e não está escrita em nenhum código-fonte, mantendo a segurança das credenciais.
+⚠️ A chave da API do ApiLayer é passada via variável no momento do apply, e não está escrita em nenhum código-fonte, mantendo a segurança das credenciais.
+⚠️ Gerar token através de longin gratuito no site https://apilayer.com/signup
 ⚠️ Certifique-se de que as credenciais da AWS estejam configuradas corretamente.
 
 ## API de Cotações
