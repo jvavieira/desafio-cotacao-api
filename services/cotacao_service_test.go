@@ -325,3 +325,45 @@ func TestBuscarHistorico_ErroUnmarshal(t *testing.T) {
 		t.Errorf("Esperava retorno nil em erro de unmarshal")
 	}
 }
+
+func TestSalvarCotacaoNoDynamo_Sucesso(t *testing.T) {
+	called := false
+
+	original := services.PutItemFn
+	services.PutItemFn = func(_ *dynamodb.Client, _ *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
+		called = true
+		return &dynamodb.PutItemOutput{}, nil
+	}
+	defer func() { services.PutItemFn = original }()
+
+	cotacao := models.Cotacao{
+		MoedaOrigem:  "BRL",
+		MoedaDestino: "USD",
+		Valor:        5.42,
+		DataHora:     time.Now(),
+	}
+
+	services.SaveCotacao(cotacao)
+
+	if !called {
+		t.Errorf("PutItemFn não foi chamado")
+	}
+}
+
+func TestSalvarCotacaoNoDynamo_ErroPutItem(t *testing.T) {
+	original := services.PutItemFn
+	services.PutItemFn = func(_ *dynamodb.Client, _ *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
+		return nil, errors.New("erro simulado")
+	}
+	defer func() { services.PutItemFn = original }()
+
+	cotacao := models.Cotacao{
+		MoedaOrigem:  "BRL",
+		MoedaDestino: "USD",
+		Valor:        5.00,
+		DataHora:     time.Now(),
+	}
+
+	services.SaveCotacao(cotacao)
+	// Nenhuma validação explícita: só estamos garantindo que não panica
+}

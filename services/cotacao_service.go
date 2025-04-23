@@ -32,6 +32,10 @@ var (
 	UnmarshalList = attributevalue.UnmarshalListOfMaps
 )
 
+var PutItemFn = func(client *dynamodb.Client, input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
+	return client.PutItem(context.TODO(), input)
+}
+
 var SecretsFetcher = BuscarAPIKeyDoFixer
 var SaveCotacao = SalvarCotacaoNoDynamo
 
@@ -140,7 +144,7 @@ func SalvarCotacaoNoDynamo(cotacao models.Cotacao) {
 		return
 	}
 
-	_, err = client.PutItem(context.TODO(), &dynamodb.PutItemInput{
+	_, err = PutItemFn(client, &dynamodb.PutItemInput{
 		TableName: aws.String("Cotacoes"),
 		Item:      item,
 	})
