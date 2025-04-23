@@ -33,6 +33,7 @@ var (
 )
 
 var SecretsFetcher = BuscarAPIKeyDoFixer
+var SaveCotacao = SalvarCotacaoNoDynamo
 
 func BuscarUltimaCotacao() models.Cotacao {
 	token := SecretsFetcher()
@@ -79,7 +80,7 @@ func BuscarUltimaCotacao() models.Cotacao {
 		DataHora:     time.Now(),
 	}
 
-	SalvarCotacaoNoDynamo(cotacao)
+	SaveCotacao(cotacao)
 
 	return cotacao
 
