@@ -25,14 +25,19 @@ jobs:
 
       - name: Rodar testes e validar cobertura mínima real
         run: |
-          echo "🏁 Executando testes só nos pacotes relevantes..."
+          echo "🏁 Executando testes nos pacotes relevantes..."
 
           go test ./services ./handlers -coverprofile=coverage.out
 
-          echo "📂 Arquivos presentes na cobertura:"
+          echo "📂 Arquivos presentes na cobertura (pré-filtro):"
           cut -d ':' -f 1 coverage.out | sort | uniq
 
-          echo "📊 Cobertura combinada:"
+          echo "🧹 Removendo linha 'mode:' do início do coverage.out"
+          grep -v "^mode:" coverage.out > coverage-clean.out
+          echo "mode: set" > coverage.out
+          cat coverage-clean.out >> coverage.out
+
+          echo "📊 Calculando cobertura combinada..."
           total=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
           echo "Cobertura total combinada: $total%"
 
