@@ -1,5 +1,6 @@
 resource "aws_ecr_repository" "cotacao_api" {
   name                 = "cotacao-api"
+  force_delete         = true  
   image_tag_mutability = "MUTABLE"
 
   encryption_configuration {
@@ -9,6 +10,7 @@ resource "aws_ecr_repository" "cotacao_api" {
 
 resource "aws_ecr_repository" "cotacao_lambda" {
   name                 = "cotacao-lambda"
+  force_delete         = true
   image_tag_mutability = "MUTABLE"
 
   encryption_configuration {
