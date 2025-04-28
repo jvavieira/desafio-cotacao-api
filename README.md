@@ -1,6 +1,6 @@
 # API de Cotações BRL → USD
 
-Este projeto é parte de um desafio técnico para a vaga de Cloud. Ele consiste em uma aplicação que consulta a cotação do dólar (USD) em relação ao real (BRL), armazena os dados em um banco de dados e disponibiliza endpoints REST para consulta.
+Este projeto é parte de um desafio técnico e pessoal. Ele consiste em uma aplicação que consulta a cotação do dólar (USD) em relação ao real (BRL), armazena os dados em um banco de dados e disponibiliza endpoints REST para consulta.
 
 ## Escolha da Linguagem Go
 

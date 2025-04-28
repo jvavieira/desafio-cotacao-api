@@ -1,8 +1,3 @@
-variable "fixer_api_key_value" {
-  description = "Chave da API do Fixer.io"
-  type        = string
-  sensitive   = true
-}
 
 resource "aws_secretsmanager_secret" "fixer_api_key" {
   name = "fixer-api-key-dev"
